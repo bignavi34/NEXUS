@@ -1,0 +1,54 @@
+from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+from langchain_groq import ChatGroq
+
+from langgraph.graph import (
+    StateGraph,
+    MessagesState,
+    START,
+    END,
+)
+
+from app.config.settings import GROQ_API_KEY
+
+
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0,
+    api_key=GROQ_API_KEY,
+)
+
+
+def call_model(state: MessagesState):
+
+    response = llm.invoke(
+        state["messages"]
+    )
+
+    return {
+        "messages": [response]
+    }
+
+
+def build_agent():
+
+    graph = StateGraph(
+        MessagesState
+    )
+
+    graph.add_node(
+        "assistant",
+        call_model
+    )
+
+    graph.add_edge(
+        START,
+        "assistant"
+    )
+
+    graph.add_edge(
+        "assistant",
+        END
+    )
+
+    return graph.compile()
